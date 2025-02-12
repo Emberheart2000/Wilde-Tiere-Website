@@ -131,6 +131,7 @@ p {
     padding-left: 1.5em;
     padding-right: 0.5em;
     justify-content: flex-start;
+    grid-column: 5 / span 5;
 
 }
 
@@ -140,7 +141,7 @@ p {
     color: #4e3714;
     background-color: #ff8c00;
     padding-left: 1.5em;
-    min-width: 12em;
+    padding-right: 0.5em;
     height: 100%
 }
 
@@ -160,6 +161,7 @@ p {
     /* Stellt sicher, dass das Icon als Block-Element behandelt wird */
     object-fit: cover;
     align-self: left;
+    grid-column: 3 / span 1;
     /* transform: rotate(90deg); */
 }
 
@@ -172,7 +174,8 @@ p {
 }
 
 .iconBox {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
     justify-content: center;
     align-items: center;
     border: 0.5px solid #926828;
@@ -186,8 +189,7 @@ p {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1em;
-    height: 120em;
+    height: 150em;
 }
 </style>
 

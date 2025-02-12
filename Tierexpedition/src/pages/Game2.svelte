@@ -5,7 +5,8 @@
   import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
   import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader";
   import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
-  import { directionToColor, log } from "three/tsl";
+  import { directionToColor, instancedMesh, log } from "three/tsl";
+  import { load } from "three/examples/jsm/libs/opentype.module.js";
 
   let scene, camera, renderer, controls, particleSystem, raycaster, mouse;
   let floor, model;
@@ -72,11 +73,12 @@
 
     // SVG-Illustrationen laden und zur Szene hinzufügen
     //loadSVG(5, 'pyramid.svg', 0.05, 100,4,50);
-    loadSVG(10, "stone.svg", 0.03, 100, 3, 100);
-    loadSVG(10, "acazia.svg", 0.1, 100, 13.5, 100);
-    loadSVG(10, "bush.svg", 0.04, 100, 5.5, 100);
-    loadSVG(10, "cactus.svg", 0.03, 100, 2.6, 100);
-    loadSVG(1, "termites.svg", 0.03, 0, 2.8, 15);
+    // loadSVG(10, "stone.svg", 0.03, 100, 3, 100);
+    // loadSVG(10, "acazia.svg", 0.1, 100, 13.5, 100);
+    // loadSVG(10, "bush.svg", 0.04, 100, 5.5, 100);
+    // loadSVG(10, "cactus.svg", 0.03, 100, 2.6, 100);
+    // loadSVG(1, "termites.svg", 0.03, 0, 2.8, 15);
+    loadSVGInstances(10, "stone.svg", 0.03);
 
     const map = new THREE.TextureLoader().load("stone.png")
     const material = new THREE.SpriteMaterial({ map });
@@ -138,67 +140,21 @@
     );
   }
 
-  function loadSVG(
-    count,
-    svgPath,
-    scale = 0.03,
-    posx = 100,
-    posy = 3,
-    posz = 100
-  ) {
-    for (let i = 0; i < count; i++) {
-      const loader = new SVGLoader();
-      loader.load(
-        svgPath,
-        (data) => {
-          const paths = data.paths;
-          const group = new THREE.Group();
+  function loadSVGInstances(count, texturePath, scale) {
+  const map = new THREE.TextureLoader().load(texturePath);
+  const material = new THREE.SpriteMaterial({ map });
+  const geometry = new THREE.PlaneGeometry(scale, scale);
+  const instancedMesh = new THREE.InstancedMesh(geometry, material, count);
 
-          paths.forEach((path) => {
-            const material = new THREE.MeshBasicMaterial({
-              color: path.color,
-              side: THREE.DoubleSide,
-              depthWrite: false,
-              transparent: true,
-              opacity: 1.0,
-            });
-
-            const shapes = SVGLoader.createShapes(path);
-            shapes.forEach((shape) => {
-              const geometry = new THREE.ShapeGeometry(shape);
-              const mesh = new THREE.Mesh(geometry, material);
-              group.add(mesh);
-            });
-          });
-
-          centerSVG(group);
-
-          group.position.set(
-            Math.random() * posx - posx / 2,
-            posy,
-            Math.random() * posz - posz / 2
-          ); // Setzen Sie die Position der Gruppe
-          group.scale.set(scale, scale, scale); // Skalierung der Gruppe
-          group.rotation.set(0, 0, Math.PI); // Rotation der Gruppe
-          scene.add(group);
-          GroupArray.push(group);
-          console.log("SVG erfolgreich geladen");
-        },
-        undefined,
-        (error) => {
-          console.error("Fehler beim Laden der SVG:", error);
-        }
-      );
-    }
+  for (let i = 0; i < count; i++) {
+    const matrix = new THREE.Matrix4();
+    matrix.setPosition(new THREE.Vector3(0, 0, 0)); // Positionen anpassen, um die Instanzen zu verteilen
+    instancedMesh.setMatrixAt(i, matrix);
   }
-  function centerSVG(group) {
-    const box = new THREE.Box3().setFromObject(group);
-    const center = new THREE.Vector3();
-    box.getCenter(center);
 
-    group.position.sub(center);
+  scene.add(instancedMesh);
+}
 
-  }
   function addDustParticles() {
     const particleCount = 100;
     const particles = new THREE.BufferGeometry();
@@ -243,26 +199,6 @@
   // Animationsschleife
   function animate() {
     requestAnimationFrame(animate);
-
-    if (model) {
-      distance = camera.position.distanceTo(model.position);
-    }
-    if (GroupArray) {
-      const camPos = camera.getWorldPosition(new THREE.Vector3());
-      GroupArray.forEach((group) => {
-        group.children.forEach((child) => {
-            // const deltaX = camPos.x - child.position.x;
-            // const deltaZ = camPos.z - child.position.z;
-
-            // const angleY = Math.atan2(deltaX, deltaZ);
-
-            // child.rotation.set(Math.PI, angleY, Math.PI);
-
-            child.lookAt(camera.position);
-            child.rotation.set(Math.PI, child.rotation.y, Math.PI);
-        });
-      });
-    }
 
     const step = 0.3;
     if (moveForward) controls.moveForward(step);
